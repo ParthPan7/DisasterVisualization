@@ -4,12 +4,25 @@
 <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.24.0/d3-legend.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/LIB/d3-scale-radial.js"></script>
-
+<style type="text/css">
+	
+	#message{
+		position: absolute;
+		left:1000px;
+		top: 400px;
+		background-color: #F6E8C3;
+		color: #8C5108;
+		font-family: sans-serif;
+	}
+</style>
 <!-- The radial bar chart has been referenced from web sources such as :: https://www.d3-graph-gallery.com/graph/circular_barplot_basic.html ::https://www.d3-graph-gallery.com/graph/circular_barplot_label.html -->
 <!-- other web sources are official d3.js tutorial from mike bostock ! :: https://bl.ocks.org/mbostock/3686329aa6e1f5938df8eef12ec353fe -->
 <!-- web source for legend ::: https://www.d3-graph-gallery.com/graph/custom_legend.html -->
 <div id="radialBarCharViz">
 	<svg id="radialsvg"></svg>
+</div>
+<div  id="message">
+	<p id="paraMessage">Hello my name is Khan</p>
 </div>
 <script>
  var data = {{ data.stack_bar_data | safe }};
@@ -82,10 +95,18 @@ var margin = {top: 150, right: 0, bottom: 0, left: 0},
 
 
   // Add the bars
- let handleMouseOver = function(d,i){
- 	console.log(d.data["1996-2002"]);
+ let MouseOverEventHandler = function(d,i){
+ 	//console.log(d.data["1996-2002"]);
+ 	document.getElementById("paraMessage").innerHTML = "<i>Country Name : </i> "+dataCountryMappingDictonary[d.data.Code]+"<br/>"+"<i><u>Death stats</u></i>"+"<br/><br/>"+"(1996-2002) - "+d.data["1996-2002"]+" deaths</br>"
+ 															+"(2003-2006) - "+d.data["2003-2006"]+" deaths</br>"
+ 															+"(2007-2010) - "+d.data["2007-2010"]+" deaths</br>"
+ 															+"(2011-2017) - "+d.data["2011-2017"]+" deaths</br>"
+ 															+"total deaths - "+d.data.total;	
  }
-
+ let MouseOutEventHandler = function(d,i){
+ 	document.getElementById("paraMessage").innerHTML ="";
+ 	//document.getElementById("paraMessage").background-color="white";
+ }
 svg.append("g")
   .selectAll("g")
     .data(stackRange)
@@ -94,7 +115,7 @@ svg.append("g")
     .selectAll("path")
     .data(function(d){ return d;})
     .enter()
-    .append("path").on("mouseover", handleMouseOver)
+    .append("path").on("mouseover", MouseOverEventHandler).on("mouseout",MouseOutEventHandler)
       .attr("d", d3.arc()     // imagine your doing a part of a donut plot
           .innerRadius(function(d) {   return y(d[0]); })
           .outerRadius(function(d) { return y(d[1]); })
