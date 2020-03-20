@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<script src="https://d3js.org/d3.v4.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.24.0/d3-legend.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/LIB/d3-scale-radial.js"></script>
+<style type="text/css">
+	
+	#message{
+		position: absolute;
+		left:1000px;
+		top: 400px;
+		background-color: #F6E8C3;
+		color: #8C5108;
+		font-family: sans-serif;
+	}
+</style>
+<!-- The radial bar chart has been referenced from web sources such as :: https://www.d3-graph-gallery.com/graph/circular_barplot_basic.html ::https://www.d3-graph-gallery.com/graph/circular_barplot_label.html -->
+<!-- other web sources are official d3.js tutorial from mike bostock ! :: https://bl.ocks.org/mbostock/3686329aa6e1f5938df8eef12ec353fe -->
+<!-- web source for legend ::: https://www.d3-graph-gallery.com/graph/custom_legend.html -->
+<div id="radialBarCharViz">
+	<svg id="radialsvg"></svg>
+</div>
+<div  id="message">
+	<p id="paraMessage">Hello my name is Khan</p>
+</div>
+<script>
+ var data = {{ data.stack_bar_data | safe }};
+ var dataCountryMapping = {{data.country_mapping_data | safe }};
+ var dataCountryMappingDictonary = {};
+ var keys = [""];
+  for(let i=0; i<dataCountryMapping.length; ++i){
+      dataCountryMappingDictonary[dataCountryMapping[i].Code] = dataCountryMapping[i].Entity;
+  }
+
+var svg;
+function plotRadialStackBar(data,index) {
+
+   var range = [
+  [50, 100],
+  [150, 500],
+  [500,1500],
+  [1500,15000],
+  [15000,30000],
+  [30000,50000]
+];
+var maxRange = range[index][1]
+var minRange = range[index][0]
+var color;
+
+var margin = {top: 150, right: 0, bottom: 0, left: 0},
+    width = 1000 - margin.left - margin.right,
+    height = 1040 - margin.top - margin.bottom,
+    innerRadius = 150,
+    outerRadius = Math.min(width, height) / 2;   // the outerRadius goes from the middle of the SVG area to the border
+    if(svg!=null){svg.remove();}
+ 	svg = d3.select("#radialsvg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + (width / 2  + margin.left) + "," + (height / 2 + margin.top) + ")");
+
+
+  console.log(data);
+  data.sort(function(a, b) { return b.total - a.total; });
+  // Scales
+  var subgrouping = [
+  "1996-2002",
+  "2003-2006",
+  "2007-2010",
+  "2011-2017",
+  "total"
+  ];
+
+  var grouping  = d3.map(data, function(d){ if(d.total>minRange & d.total<maxRange){return(d.Code)}}).keys()
+
+  var x = d3.scaleBand()
+      .domain(grouping)
+      .range([0, 2 * Math.PI])    
+      .align(0)                  
+      .domain(data.map(function(d) { if(d.total>minRange & d.total<maxRange){return d.Code;} } )); 
+
+  var y = d3.scaleRadial()
+      .range([innerRadius, outerRadius])   
+     .domain([0, maxRange*2]); 
+
+
+   color = d3.scaleOrdinal()
+  .domain([])
+  .range(d3.schemeBrBG[subgrouping.length]);
+  var z = d3.scaleOrdinal()
+    .domain(subgrouping)
+    .range(d3.schemeBrBG[subgrouping.length+1])
+  var stackRange = d3.stack().keys(subgrouping)(data);
+
+
+  // Add the bars
+ let MouseOverEventHandler = function(d,i){
+ 	//console.log(d.data["1996-2002"]);
+ 	document.getElementById("paraMessage").innerHTML = "<i>Country Name : </i> "+dataCountryMappingDictonary[d.data.Code]+"<br/>"+"<i><u>Death stats</u></i>"+"<br/><br/>"+"(1996-2002) - "+d.data["1996-2002"]+" deaths</br>"
+ 															+"(2003-2006) - "+d.data["2003-2006"]+" deaths</br>"
+ 															+"(2007-2010) - "+d.data["2007-2010"]+" deaths</br>"
+ 															+"(2011-2017) - "+d.data["2011-2017"]+" deaths</br>"
+ 															+"total deaths - "+d.data.total;	
+ }
+ let MouseOutEventHandler = function(d,i){
+ 	document.getElementById("paraMessage").innerHTML ="";
+ 	//document.getElementById("paraMessage").background-color="white";
+ }
+svg.append("g")
+  .selectAll("g")
+    .data(stackRange)
+    .enter().append("g")
+    .attr("fill",function(d) { return z(d.key); })
+    .selectAll("path")
+    .data(function(d){ return d;})
+    .enter()
+    .append("path").on("mouseover", MouseOverEventHandler).on("mouseout",MouseOutEventHandler)
+      .attr("d", d3.arc()     // imagine your doing a part of a donut plot
+          .innerRadius(function(d) {   return y(d[0]); })
+          .outerRadius(function(d) { return y(d[1]); })
+          .startAngle(function(d) { return x(d.data.Code); })
+          .endAngle(function(d) { return x(d.data.Code) + x.bandwidth(); })
+          .padAngle(0.1)
+          .padRadius(innerRadius))
+      	  
+        
+  // Add the labels
+  svg.append("g")
+      .selectAll("g")
+      .data(data)
+      .enter()
+      .append("g")
+        .attr("text-anchor", function(d) { return (x(d.Code) + x.bandwidth() / 2 + Math.PI) % (2 * Math.PI) < Math.PI ? "end" : "start"; })
+        .attr("transform", function(d) { return "rotate(" + ((x(d.Code) + x.bandwidth() / 2) * 180 / Math.PI - 90) + ")"+"translate(" + (y(d['total'])+111) + ",0)"; })
+      .append("text")
+        .text(function(d){if(d.total>minRange & d.total<maxRange){return(dataCountryMappingDictonary[d.Code])}})
+        .attr("transform", function(d) { return (x(d.Code) + x.bandwidth()/2  + Math.PI) % (2 * Math.PI) < Math.PI ? "rotate(180)" : "rotate(0)"; })
+        .style("font-size", "11px")
+        .style("fill","#8C5108")
+        .attr("alignment-baseline", "end")
+
+ console.log(color.domain())
+  var legendRectSize = 13;
+  var legendSpacing = 4;
+      var legend = svg.selectAll('.legend')
+    .data(subgrouping)
+    .enter()
+    .append('g')
+    .attr('class', 'legend')
+    .attr('transform', function(d, i) {
+      var height = legendRectSize + legendSpacing;
+      var offset =  height * color.domain().length /2;
+      var horz = -2 * legendRectSize;
+      var vert = (i-3) * height - offset;
+      return 'translate(' + horz + ',' + vert + ')';
+    });
+
+          legend.append('rect')
+    .attr('width', legendRectSize)
+    .attr('height', legendRectSize)
+    .style('fill', color)
+    .style('stroke', color);
+
+          legend.append('text')
+    .attr('x', legendRectSize + legendSpacing)
+    .attr('y', legendRectSize - legendSpacing)
+    .text(function(subgrouping) {
+
+     console.log("data"+subgrouping)
+     return subgrouping; }).style("font-family","Calbri,sans-serif")
+        .style("font-weight","lighter");
+
+}
+plotRadialStackBar(data,0);
+
+
+</script>
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+  <div class="slidecontainer">
+    <center> <input type="range" min="0" max="6" value="0" class="slider" id="myRange"></center>
+    <label><center>Alter death range</center></label>
+
+
+</div>
+<!-- Load d3.js -->
+<script>
+//logic for slider has been deduced from w3cschool.com
+var slider = document.getElementById("myRange");
+slider.oninput = function() {
+  plotRadialStackBar(data,this.value);
+}
+</script>
+</body>
+</html>
