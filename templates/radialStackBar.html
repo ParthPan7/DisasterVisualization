@@ -4,6 +4,7 @@
 <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.24.0/d3-legend.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/LIB/d3-scale-radial.js"></script>
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 <style type="text/css">
 	
 	#message{
@@ -14,15 +15,25 @@
 		color: #8C5108;
 		font-family: sans-serif;
 	}
+	div.label{
+	    color:#8C5108;
+	}
+
 </style>
 <!-- The radial bar chart has been referenced from web sources such as :: https://www.d3-graph-gallery.com/graph/circular_barplot_basic.html ::https://www.d3-graph-gallery.com/graph/circular_barplot_label.html -->
 <!-- other web sources are official d3.js tutorial from mike bostock ! :: https://bl.ocks.org/mbostock/3686329aa6e1f5938df8eef12ec353fe -->
 <!-- web source for legend ::: https://www.d3-graph-gallery.com/graph/custom_legend.html -->
+<div class="w3-bar w3-green">
+  <form method="get" action="/home"> <a href="#" class="w3-bar-item w3-button"  onclick="event.target.parentNode.submit();">Dashboard</a> </form>
+  <form method="get" action="/requestRadialStackBar"> <a href="#" class="w3-bar-item w3-button"  onclick="event.target.parentNode.submit();">Radial View</a> </form>
+  <form method="get" action="/about"> <a href="#" class="w3-bar-item w3-button"  onclick="event.target.parentNode.submit();">About</a></form>
+
+</div>
 <div id="radialBarCharViz">
 	<svg id="radialsvg"></svg>
 </div>
 <div  id="message">
-	<p id="paraMessage">Hello my name is Khan</p>
+	<p id="paraMessage"></p>
 </div>
 <script>
  var data = {{ data.stack_bar_data | safe }};
@@ -34,16 +45,17 @@
   }
 
 var svg;
-function plotRadialStackBar(data,index) {
-
-   var range = [
+var range = [
   [50, 100],
   [150, 500],
   [500,1500],
   [1500,15000],
   [15000,30000],
   [30000,50000]
-];
+    ];
+function plotRadialStackBar(data,range,index) {
+
+
 var maxRange = range[index][1]
 var minRange = range[index][0]
 var color;
@@ -172,7 +184,7 @@ svg.append("g")
         .style("font-weight","lighter");
 
 }
-plotRadialStackBar(data,0);
+plotRadialStackBar(data,range,0);
 
 
 </script>
@@ -181,9 +193,10 @@ plotRadialStackBar(data,0);
     <title>Title</title>
 </head>
 <body>
+
   <div class="slidecontainer">
     <center> <input type="range" min="0" max="6" value="0" class="slider" id="myRange"></center>
-    <label><center>Alter death range</center></label>
+    <label style="color:#8C5108;s"><center>Alter death range</center></label>
 
 
 </div>
@@ -192,7 +205,9 @@ plotRadialStackBar(data,0);
 //logic for slider has been deduced from w3cschool.com
 var slider = document.getElementById("myRange");
 slider.oninput = function() {
-  plotRadialStackBar(data,this.value);
+  plotRadialStackBar(data,range,this.value);
+
+  document.getElementById("paraMessage").innerHTML = "<b>Selected Death Range </b></br>"+"<center>"+range[this.value][0]+"-"+range[this.value][1]+"</center>";
 }
 </script>
 </body>
