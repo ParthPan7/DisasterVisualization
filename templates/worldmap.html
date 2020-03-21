@@ -70,6 +70,12 @@ h3{
     top:180px;
     left:580px;
 }
+#donutFeed{
+	left: 70px;
+	position: absolute;
+	background-color: #FEE0D2;
+	color:#A50E14;
+}
 </style>
 
 <!-- Load d3.js -->
@@ -424,7 +430,7 @@ plotLinearScale();
 
 </div>
 <div id="donut_data">
-	
+	<p id="donutFeed">Hello Sirji ! </p>
 	<svg id="donutsvg"></svg>
 </div>
 <script>
@@ -472,7 +478,7 @@ var graphData1 = graphData.filter(function (entry) {
         outcome[obj.Entity] = percentage;
     })
     console.log(outcome)
-
+    renderDonutStats("Total Deaths : "+Math.round(totalDeaths));
 
 
 
@@ -482,6 +488,7 @@ var graphData1 = graphData.filter(function (entry) {
 }
 
 function drawDonutChart(data,color){
+
 	if (lineGraphSvg!=null) {lineGraphSvg.remove();}
   // Compute the position of each group on the pie:
   var pie = d3.pie()
@@ -523,7 +530,7 @@ function drawDonutChart(data,color){
 });
 
 
-  donutsvg
+  /*donutsvg
     .selectAll('allPolylines')
     .data(dataofPie)
     .enter()
@@ -557,7 +564,7 @@ function drawDonutChart(data,color){
       })
       .style("font-family","Calbri,sans-serif")
        .style("font-weight","bold")
-       .style("font-size","12px");
+       .style("font-size","12px");*/
 
       console.log("color domain"+color.domain)
       var legendRectSize = 13;
@@ -596,6 +603,10 @@ function drawDonutChart(data,color){
 
 
 
+}
+
+function renderDonutStats(message){
+	document.getElementById("donutFeed").innerHTML = message;
 }
 </script>
 <script>
