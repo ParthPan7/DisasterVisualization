@@ -7,17 +7,17 @@
 https://medium.com/@louisemoxy/create-a-d3-line-chart-animation-336f1cb7dd61
 //path generator logic :::: https://www.d3-graph-gallery.com/graph/donut_label.html -->
 <meta charset="utf-8">
-<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css"/>
-<header>
-  
+
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 <div class="w3-bar w3-green">
   <form method="get" action="/map"> <a href="#" class="w3-bar-item w3-button"  onclick="event.target.parentNode.submit();">Dashboard</a> </form>
   <form method="get" action="/requestRadialStackBar"> <a href="#" class="w3-bar-item w3-button"  onclick="event.target.parentNode.submit();">Radial View</a> </form>
   <form method="get" action="/about"> <a href="#" class="w3-bar-item w3-button"  onclick="event.target.parentNode.submit();">About</a></form>
 </div>
-</header>
-
-
+</head>
 <style>
 	body{
 		position: absolute;
@@ -75,6 +75,7 @@ h3{
     top : 350px;
     left:600px;
 }
+
 #donut_data{
     position:absolute;
     top:180px;
@@ -86,6 +87,15 @@ h3{
 	background-color: #FEE0D2;
 	color:#A50E14;
 }
+#choroplethSVG{
+
+  position: relative;
+}
+#yearUpdationDiv{
+
+  position: relative;
+  top: 70px;
+}
 </style>
 
 <!-- Load d3.js -->
@@ -96,29 +106,46 @@ h3{
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.24.0/d3-legend.js"></script>
 
 
-<div id="yearUpdationDiv"><center> <h3>Aggregate Disasters Impact  <span id="year"></span></h3></center></div>
-<svg id="my_dataviz" width="600" height="600"></svg>
+<!--<div id="yearUpdationDiv"><center> <h3>Aggregate Disasters Impact  <span id="year"></span></h3></center></div>
+<svg id="choroplethSVG" width="600" height = "600"> 
+ 
+</svg> -->
+<div id="yearUpdationDiv"><center> <h4>Aggregate Disasters Impact  <span id="year"></span></h4></center></div>
+<div id="choroplethSVG">
+ 
+</div>
 
 <script>
 
  var graphData = {{ data.plot_data | safe }}
- var lineGraphSvg,donutsvg;
+ var lineGraphSvg,donutsvg,svg;
  var dataCountryMapping = {{data.country_mapping_data | safe }};
  var projectionSystem;
  var dataCountryMappingDictonary;
- function plotCholoropleth(YearRequested)
- {
+ var currentYear="1996";
+ var defaultProjectionSystem = "Nell–Hammer projection";
+ function plotCholoropleth(YearRequested,projectionSystem)
+ {  
+    var width,height;
+    width = 600;
+    height = 600;
     dataCountryMappingDictonary = {}
     var keys = [""];
-  for(let i=0; i<dataCountryMapping.length; ++i){
-      dataCountryMappingDictonary[dataCountryMapping[i].Code] = dataCountryMapping[i].Entity;
-      }
+    for(let i=0; i<dataCountryMapping.length; ++i){
+        dataCountryMappingDictonary[dataCountryMapping[i].Code] = dataCountryMapping[i].Entity;
+    }
 
+    //if (null != svg ) {svg.remove();}
+    
 // The svg
-var svg = d3.select("svg"),
+  /*svg = d3.select("#choroplethSVG").append("svg"),
   width = +svg.attr("width"),
-  height = +svg.attr("height");
+  height = +svg.attr("height"); */
 
+ svg = d3.select("#choroplethSVG")
+    .append("svg")
+    .attr("height", 600)
+    .attr("width", 600);
 // Map and projection
 var path = d3.geoPath();
 //d3.geoSinuMollweide()
@@ -126,8 +153,34 @@ var path = d3.geoPath();
 //d3.geoVanDerGrinten2()
 //d3.geoNellHammer()
 //d3.geoWagner7()
+var projectionFunction;
+switch(projectionSystem){
+  case "Nell–Hammer projection":
+  projectionFunction = d3.geoNellHammer(); 
+  break;
 
-var projection = d3.geoNellHammer()
+  case "The Robinson projection":
+  projectionFunction = d3.geoRobinson();
+  break;
+
+  case "Patterson cylindrical projection":
+  projectionFunction = d3.geoPatterson(); 
+  break;
+
+  case "Wagner VI projection":
+  projectionFunction = d3.geoWagner7();
+  break;
+
+  case "Sinu-Mollweide projection":
+  projectionFunction = d3.geoSinuMollweide();
+  break;
+
+  case "stereographic projection":
+  projectionFunction = d3.geoStereographic();
+  break;
+
+}
+var projection = projectionFunction
   .scale(width / 1.3 / Math.PI)
   .center([0,20])
   .translate([width/2 , height/2 ]);
@@ -196,7 +249,7 @@ function ready(error, topo) {
 
    if(lineGraphSvg!=null){lineGraphSvg.remove();}
    if(donutsvg!=null){donutsvg.remove();}
-   country = dataCountryMappingDictonary[d.id];
+   //country = dataCountryMappingDictonary[d.id];
    drawLineGraph(d);
 
   }
@@ -229,11 +282,12 @@ function ready(error, topo) {
 
  }
  var defaultYear = "1996";
+ 
 //plotLinearScale();
-plotCholoropleth(defaultYear);
+plotCholoropleth(defaultYear,defaultProjectionSystem);
 
 function drawLineGraph(countryId){
-
+   var graphData = {{ data.plot_data | safe }}
    var totalDeathTallyId = "totalDeathTally";
    var specificCountryStatId = "specificCountryStat";
    var titleMessage = "<b><i>National periodic trend</i></b>";
@@ -245,7 +299,7 @@ function drawLineGraph(countryId){
         return entry.Code==countryId.id && (entry.Year >= 1996 && entry.Year <=2017)
     });
 
-    console.log(graphData1);
+  console.log(graphData1);
 
 
  	lineGraphSvg = d3
@@ -335,6 +389,7 @@ chart
       .style("text-anchor", "middle")
       .text("Deaths");
 
+      
 
 }
 
@@ -349,6 +404,7 @@ chart
 
 </script>
 <body>
+
 
 <div id="chart"></div>
 
@@ -604,34 +660,43 @@ output.innerHTML = slider.value;
 
 slider.oninput = function() {
   output.innerHTML = this.value;
-  plotCholoropleth(this.value);
+  if (svg!=null) {svg.remove();}
+  plotCholoropleth(this.value,defaultProjectionSystem);
   if(donutsvg!=null){donutsvg.remove();}
+
   var specificCountryStatmessage = document.getElementById(specificCountryStatId).innerHTML;
   if(specificCountryStatmessage!=""){
     document.getElementById(specificCountryStatId).innerHTML = "";
   }
+  currentYear = this.value;
   InvokeDonutChart(this.value)
 }
 </script>
 <p align="center">customized projection system</p>
 
-<center><label for="cars">Choose a projection system</label>
+<center><label for="projectionSystemLabel">Choose a projection system</label>
 
-<select id="cars">
+<select id="projections">
   <option value="Wagner VI projection">Wagner VI projection</option>
   <option value="The Robinson projection">The Robinson projection</option>
   <option value="Patterson cylindrical projection">Patterson cylindrical projection</option>
-  <option value="Nell–Hammer projection">Nell–Hammer projection</option>
+  <option value="Nell–Hammer projection" selected>Nell–Hammer projection</option>
+  <option value="Sinu-Mollweide projection">Sinu-Mollweide projection</option>
+  <option value="stereographic projection">stereographic projection </option>
 </select>
 </center>
  <script>
-document.getElementById("cars").addEventListener("change", myFunction);
+document.getElementById("projections").addEventListener("change", myFunction);
 
 function myFunction() {
-  var x = document.getElementById("cars").value;
-  alert(x);
+  var projectionSystem = document.getElementById("projections").value;
+  defaultProjectionSystem = projectionSystem;
+  if(svg!=null){svg.remove();}
+  plotCholoropleth(currentYear,projectionSystem);
+  
 }
 </script>
+
 </body>
 
 </html>
