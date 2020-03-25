@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+
+<!--donut chart has been refered from web source ::: https://www.d3-graph-gallery.com/graph/donut_label.html
+//logic for legend hs been deduced from web source   ::: https://www.d3-graph-gallery.com/graph/custom_legend.html
+//logic for tooltip has been deduced from http://jsfiddle.net/5PENv/
+// set the dimensions and margins of the graph
+https://medium.com/@louisemoxy/create-a-d3-line-chart-animation-336f1cb7dd61
+//path generator logic :::: https://www.d3-graph-gallery.com/graph/donut_label.html -->
+<meta charset="utf-8">
+
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<div class="w3-bar w3-green">
+  <form method="get" action="/map"> <a href="#" class="w3-bar-item w3-button"  onclick="event.target.parentNode.submit();">Dashboard</a> </form>
+  <form method="get" action="/requestRadialStackBar"> <a href="#" class="w3-bar-item w3-button"  onclick="event.target.parentNode.submit();">Radial View</a> </form>
+  <form method="get" action="/about"> <a href="#" class="w3-bar-item w3-button"  onclick="event.target.parentNode.submit();">About</a></form>
+</div>
+</head>
+<style>
+
+	body{
+
+		font-family:Helvetica;
+	}
+	#legendDivison{
+		position: absolute;
+		top: 50px;
+		left:800px;
+	}
+	#deathScaleLegend{
+	    position: relative;
+		top: 6px;
+		left: 10px;
+	}
+    #yearUpdationDiv{
+       position:relative;
+       top:140px;
+       align:center;
+
+    }
+    #tooltip {
+    position: absolute;
+    width: 200px;
+    height: auto;
+    padding: 10px;
+    background-color: white;
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+    -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    -mox-box-shadow: 4px 4px 4px 10px rgba(0, 0, 0, 0.4);
+    box-shadow: 4px 4px 10px rbga(0, 0, 0, 0.4) pointer-events: none;
+}
+#tooltip.hidden {
+    opacity: 0;
+}
+#tooltip p {
+    margin: 0;
+    font-family: Helvetica,sans-serif;
+    font-size: 16px;
+    line-height: 20px;
+}
+#year{
+    color:#8B0000;
+}
+h3{
+    opacity:0.7;
+}
+.slidecontainer {
+  width: 500px;
+}
+#chart{
+    position:absolute;
+    top : 350px;
+    left:630px;
+}
+
+#donut_data{
+    position:absolute;
+    top:180px;
+    left:580px;
+}
+#donutFeed{
+	left: 70px;
+	position: absolute;
+	background-color: #FEE0D2;
+	color:#A50E14;
+}
+#choroplethSVG{
+
+  position: relative;
+  left: 30px;
+}
+#yearUpdationDiv{
+
+  position: relative;
+  top: 70px;
+}
+</style>
+
+<!-- Load d3.js -->
+
+<script src="https://d3js.org/d3.v4.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+<script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
+
+
+
+<!--<div id="yearUpdationDiv"><center> <h3>Aggregate Disasters Impact  <span id="year"></span></h3></center></div>
+<svg id="choroplethSVG" width="600" height = "600"> 
+ 
+</svg> -->
+<div id="yearUpdationDiv"><center> <h4>Aggregate Disasters Impact  <span id="year"></span></h4></center></div>
+<div id="choroplethSVG">
+ 
+</div>
+
+<script>
+
+ var graphData = {{ data.plot_data | safe }}
+ var lineGraphSvg,donutsvg,svg;
+ var dataCountryMapping = {{data.country_mapping_data | safe }};
+ var projectionSystem;
+ var dataCountryMappingDictonary;
+ var currentYear="1996";
+ var defaultProjectionSystem = "Nell–Hammer projection";
+ function plotCholoropleth(YearRequested,projectionSystem)
+ {  
+    var width,height;
+    width = 600;
+    height = 600;
+    dataCountryMappingDictonary = {}
+    var keys = [""];
+    for(let i=0; i<dataCountryMapping.length; ++i){
+        dataCountryMappingDictonary[dataCountryMapping[i].Code] = dataCountryMapping[i].Entity;
+    }
+
+    //if (null != svg ) {svg.remove();}
+    
+// The svg
+  /*svg = d3.select("#choroplethSVG").append("svg"),
+  width = +svg.attr("width"),
+  height = +svg.attr("height"); */
+
+ svg = d3.select("#choroplethSVG")
+    .append("svg")
+    .attr("height", 600)
+    .attr("width", 600);
+// Map and projection
+var path = d3.geoPath();
+
+var projectionFunction;
+switch(projectionSystem){
+  case "Nell–Hammer projection":
+  projectionFunction = d3.geoNellHammer(); 
+  break;
+
+  case "The Robinson projection":
+  projectionFunction = d3.geoRobinson();
+  break;
+
+  case "Patterson cylindrical projection":
+  projectionFunction = d3.geoPatterson(); 
+  break;
+
+  case "Wagner VI projection":
+  projectionFunction = d3.geoWagner7();
+  break;
+
+  case "Sinu-Mollweide projection":
+  projectionFunction = d3.geoSinuMollweide();
+  break;
+
+  case "stereographic projection":
+  projectionFunction = d3.geoStereographic();
+  break;
+
+}
+var projection = projectionFunction
+  .scale(width / 1.3 / Math.PI)
+  .center([0,20])
+  .translate([width/2 , height/2 ]);
+
+// Data and color scale
+    var data = d3.map();
+
+    for(let i=0; i<graphData.length; ++i){
+        if(graphData[i].Year == YearRequested){  data.set(graphData[i].Code,graphData[i].Deaths);}
+
+    }
+var colorScale = d3.scaleThreshold()
+  .domain([0, 50, 100, 500, 1000, 10000,50000,100000,500000])
+  .range(d3.schemeReds[9]);
+
+// Load external data and boot
+d3.queue()
+  .defer(d3.json, "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson")
+ // .defer(graphData, function(d) {  if(d.Year=="2016"){data.set(d.Code, d.Deaths);} })
+  .await(ready);
+
+function ready(error, topo) {
+
+
+
+  let mouseOver = function(d) {
+    d3.selectAll(".Country")
+      .transition()
+      .duration(200)
+      .style("opacity", .5)
+
+    d3.select(this)
+      .transition()
+      .duration(200)
+      .style("opacity", 1)
+      .style("stroke", "black")
+
+       //alert(d.id.substring(0,2));
+       d.total = data.get(d.id) ||0;
+       d3.select("#tooltip")
+        .style("left", d3.event.pageX + "px")
+        .style("top", d3.event.pageY + "px")
+        .style("opacity", 2)
+        .select("#value")
+        .text(dataCountryMappingDictonary[d.id]+" "+"Deaths :"+Math.round(d.total));
+
+        
+
+  }
+
+  let mouseLeave = function(d) {
+    d3.selectAll(".Country")
+      .transition()
+      .duration(200)
+      .style("opacity", .8)
+    d3.select(this)
+      .transition()
+      .duration(200)
+      .style("stroke", "transparent")
+
+       d3.select("#tooltip")
+        .style("opacity", 0);
+
+  }
+  let click = function(d){
+
+   if(lineGraphSvg!=null){lineGraphSvg.remove();}
+   if(donutsvg!=null){donutsvg.remove();}
+   //country = dataCountryMappingDictonary[d.id];
+   drawLineGraph(d);
+
+  }
+  // Draw the map
+  svg.append("g")
+    .selectAll("path")
+    .data(topo.features)
+    .enter()
+    .append("path")
+      // draw each country
+      .attr("d", d3.geoPath()
+        .projection(projection)
+      ).attr("fill", function (d) {
+
+
+        d.total = data.get(d.id) || 0;
+       // alert(d.total);
+        return colorScale(d.total);
+      }).on("mouseover", mouseOver )
+      .on("mouseleave", mouseLeave )
+       .on("click",click);
+
+      //fillColor(svg,data);
+
+    }
+
+
+
+
+
+ }
+ var defaultYear = "1996";
+ 
+//plotLinearScale();
+plotCholoropleth(defaultYear,defaultProjectionSystem);
+
+function drawLineGraph(countryId){
+   var graphData = {{ data.plot_data | safe }}
+   var totalDeathTallyId = "totalDeathTally";
+   var specificCountryStatId = "specificCountryStat";
+   var titleMessage = "<b><i>National periodic trend</i></b>";
+   var countryName = "<i>"+dataCountryMappingDictonary[countryId.id]+"</i>";
+    //let graphData1 = {};
+  renderDonutStats(titleMessage,totalDeathTallyId);
+  renderDonutStats(countryName,specificCountryStatId);
+	var graphData1 = graphData.filter(function (entry) {
+        return entry.Code==countryId.id && (entry.Year >= 1996 && entry.Year <=2017)
+    });
+
+  console.log(graphData1);
+
+
+ 	lineGraphSvg = d3
+  	.select("#chart")
+  	.append("svg")
+  	.attr("height", 400)
+  	.attr("width", 750);
+
+	const margin = { top: 0, bottom: 100, left: 50, right: 50 };
+	const chart = lineGraphSvg.append("g").attr("transform", `translate(${margin.left},0)`);
+	const width = +lineGraphSvg.attr("width") - margin.left - margin.right;
+	const height = +lineGraphSvg.attr("height") - margin.top - margin.bottom;
+	const grp = chart
+  	.append("g")
+  	.attr("transform", `translate(-${margin.left},-${margin.top})`);
+
+  	var parseTime = d3.timeParse("%Y");
+  	graphData1.forEach(function(d) {
+  		 d.Year = parseTime(d.Year);
+ 		 
+	});
+// Create scales
+	const yScale = d3
+  	.scaleLinear()
+  	.range([height, 0])
+  	.domain([0, d3.max(graphData1, dataPoint => dataPoint.Deaths)]);
+	const xScale = d3
+  	.scaleTime()
+  	.range([0, width])
+  	.domain(d3.extent(graphData1, dataPoint => dataPoint.Year));
+
+
+	const line = d3
+  	.line()
+  	.x(dataPoint => xScale(dataPoint.Year))
+  	.y(dataPoint => yScale(dataPoint.Deaths));
+
+// Add path
+	const path = grp
+  	.append("path")
+  	.attr("transform", `translate(${margin.left},0)`)
+  	.datum(graphData1)
+  	.attr("fill", "none")
+  	.attr("stroke", "steelblue")
+  	.attr("stroke-linejoin", "round")
+  	.attr("stroke-linecap", "round")
+  	.attr("stroke-width", 1.5)
+  	.attr("d", line);
+
+const pathLength = path.node().getTotalLength();
+// D3 provides lots of transition options, have a play around here:
+// https://github.com/d3/d3-transition
+const transitionPath = d3
+  .transition()
+  .ease(d3.easeSin)
+  .duration(2500);
+
+path
+  .attr("stroke-dashoffset", pathLength)
+  .attr("stroke-dasharray", pathLength)
+  .transition(transitionPath)
+  .attr("stroke-dashoffset", 0);
+
+// Add the X Axis
+chart
+  .append("g")
+  .attr("transform", `translate(0,${height})`)
+  .call(d3.axisBottom(xScale).ticks(graphData1.length));
+// Add the Y Axis
+chart
+  .append("g")
+  .attr("transform", `translate(0, 0)`)
+  .call(d3.axisLeft(yScale));
+
+  lineGraphSvg.append("text")
+      .attr("transform",
+            "translate(" + (width/2) + " ," +
+                           (height + margin.top + 40) + ")")
+      .style("text-anchor", "middle")
+      .text("Years");
+
+  lineGraphSvg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y",    margin.left)
+      .attr("x",0 - (height / 2))
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("Deaths");
+
+      
+
+}
+
+
+
+</script>
+
+<script type="text/javascript" >
+/*var donutwidth = 950*/
+
+
+
+</script>
+<body>
+
+
+<div id="chart"></div>
+
+<script type="text/javascript">
+	//https://medium.com/@louisemoxy/create-a-d3-line-chart-animation-336f1cb7dd61
+
+//drawLineGraph();
+</script>
+
+<div id="tooltip" class="hidden">
+    <p><strong></strong>
+    </p>
+    <p><span id="value">100</span></p>
+</div>
+
+
+
+
+
+<div id="deathScaleLegend">
+    <center><span>Death range scale</span></center>
+</div>
+
+<script>
+    function plotLinearScale(){
+    var svgWidth = 600, svgHeight=70;
+    scaleFactor = 20;
+
+var data = [
+  {  range: "0-50" },
+  {  range: "50-100"  },
+  {  range: "100-500" },
+  {  range: "500-1k" },
+  {  range: "1k-10k" },
+  {  range: "10k-50k" },
+  {  range: "50k-1M" },
+  {  range: ">1M"}
+];
+
+//alert(data.length)
+var rangeLength = 4
+
+var svg = d3.select("#deathScaleLegend")
+    .append("svg")
+    .attr("width", svgWidth)
+    .attr("height", svgHeight);
+
+
+var x = d3.scaleLinear()
+  .domain([0, 100])
+  .range([0, 300]);
+
+var colorScale = d3.scaleThreshold()
+  .domain([0,1,2,3,4,5,6,7,8,9])
+  .range(d3.schemeReds[9]);
+var pos = -1*(100/rangeLength)
+var resetPos = pos
+var adder = (100/rangeLength)
+var colorPointer = 0
+var delta = 10
+var bar = svg.selectAll("g")
+  .data(data)
+  .enter()
+  .append("g")
+  .attr("transform","translate(0," + scaleFactor + ")");
+
+bar.append("g").append("rect")
+ .attr("class", "first")
+ .attr("width", function(d) {
+   return x(100/rangeLength);  // get the width
+ })
+ .attr("x", function(d) {
+   return x(pos = pos + adder);        // get the start position
+ })
+ .attr("fill", function(d) {  return colorScale(colorPointer++); })
+ .attr("height", 20);
+
+pos = resetPos
+bar.append("text")
+    .attr("x", function(d) { return x(pos = pos+ adder)+100/(rangeLength*2)+delta; })
+    .attr("y", 27)
+    .attr("dy", ".35em")
+    .text(function(d) { return d.range; });
+}
+plotLinearScale();
+</script>
+<div class="slidecontainer">
+    <center> <input type="range" min="1996" max="2017" value="50" class="slider" id="myRange"></center>
+    <label><center>Alter Year</center></label>
+
+
+</div>
+<div id="donut_data">
+	<p id="donutFeed">
+    <br/><span id="totalDeathTally"></span>
+    <br/><span id="specificCountryStat"></span>
+  </p>
+
+	<svg id="donutsvg"></svg>
+</div>
+<script>
+  var totalDeathTallyId = "totalDeathTally";
+  var specificCountryStatId = "specificCountryStat";
+	var donutwidth = 950
+    donutheight = 450
+    donutmargin = 20
+
+
+// The radius of the pieplot is half the width or half the height (smallest one). I subtract a bit of margin.
+var radius = Math.min(donutwidth, donutheight) / 2 - donutmargin
+function InvokeDonutChart(Year){
+    var graphData = {{ data.plot_data | safe }}
+   // if(donutsvg!=null){donutsvg.remove();}
+console.log(graphData)
+//Year = '2009'
+donutsvg = d3.select("#donutsvg")
+  //.append("svg")
+    .attr("width", donutwidth)
+    .attr("height", donutheight)
+  .append("g")
+    .attr("transform", "translate(" + donutwidth/2  + "," + donutheight/2  + ")");
+let outcome = {};
+var totalDeaths = 0
+var count  = 0
+
+
+
+var color = d3.scaleOrdinal()
+  .domain([])
+  .range(d3.schemeReds[9]);
+var graphData1 = graphData.filter(function (entry) {
+
+            return entry.Year==Year && entry.Deaths!=0 && (typeof entry.Code == 'string') && entry.Entity != "World"
+
+    }).sort(function(a, b) {
+        return parseFloat(b.Deaths) - parseFloat(a.Deaths);
+    }).slice(0,7);
+    console.log(graphData1)
+    //console.log(totalDeaths)
+    totalDeaths = 0
+    graphData1.forEach(function(obj){totalDeaths+=obj.Deaths})
+    console.log(totalDeaths)
+    graphData1.forEach(function(obj){console.log(obj.Entity+" "+Math.round((obj.Deaths/totalDeaths)*100));
+        percentage = Math.round((obj.Deaths/totalDeaths)*100);
+        outcome[obj.Entity] = percentage;
+    })
+    console.log(outcome)
+    renderDonutStats("<b> Total Deaths : </b>"+Math.round(totalDeaths),totalDeathTallyId);
+
+
+
+
+  drawDonutChart(outcome,color);
+
+}
+
+function drawDonutChart(data,color){
+
+	if (lineGraphSvg!=null) {lineGraphSvg.remove();}
+  // Compute the position of each group on the pie:
+  var pie = d3.pie()
+    .value(function(d) {return d.value; })
+    .sort(null);
+
+  var dataofPie = pie(d3.entries(data))
+
+  // The arc generator
+  var arc = d3.arc()
+    .innerRadius(radius * 0.6)         // This is the size of the donut hole
+    .outerRadius(radius * 0.9)
+
+  // Another arc that won't be drawn. Just for labels positioning
+  var outerArc = d3.arc()
+    .innerRadius(radius)
+    .outerRadius(radius)
+
+  var previousMessage;
+
+  donutsvg
+    .selectAll('allSlices')
+    .data(dataofPie)
+    .enter()
+    .append('path')
+    .attr('d', arc)
+    .attr('fill', function(d){ return(color(d.data.key)) })
+    .on("mouseover", function (d) {
+
+    	
+    	var messageStat = "<b>"+d.data.key +"</b>"+" - "+d.value+"%";
+    	
+    	renderDonutStats(messageStat,specificCountryStatId);
+    
+})
+    .on("mouseout", function () {
+      renderDonutStats("",specificCountryStatId);
+    	//document.getElementById("donutFeed").innerHTML = previousMessage;
+});
+
+
+ 
+
+      console.log("color domain"+color.domain)
+      var legendRectSize = 13;
+  var legendSpacing = 4;
+      var legend = donutsvg.selectAll('.legend')
+    .data(color.domain())
+    .enter()
+    .append('g')
+    .attr('class', 'legend')
+    .attr('transform', function(d, i) {
+      var height = legendRectSize + legendSpacing;
+      var offset =  height * color.domain().length /2;
+      var horz = -4 * legendRectSize;
+      var vert = i * height - offset;
+      return 'translate(' + horz + ',' + vert + ')';
+    });
+
+          legend.append('rect')
+    .attr('width', legendRectSize)
+    .attr('height', legendRectSize)
+    .style('fill', color)
+    .style('stroke', color);
+
+          legend.append('text')
+    .attr('x', legendRectSize + legendSpacing)
+    .attr('y', legendRectSize - legendSpacing)
+    .text(function(data) {
+        if(data=="Democratic Republic of Congo"){
+          data = "Congo Republic";
+        }
+
+     return data; }).style("font-family","Calbri,sans-serif")
+        .style("font-weight","lighter")
+         ;
+
+
+
+
+
+
+}
+
+function renderDonutStats(message,id){
+	document.getElementById(id).innerHTML = message;
+
+}
+</script>
+<script>
+var slider = document.getElementById("myRange");
+var output = document.getElementById("year");
+var specificCountryStatId = "specificCountryStat";
+output.innerHTML = slider.value;
+
+slider.oninput = function() {
+  output.innerHTML = this.value;
+  if (svg!=null) {svg.remove();}
+  plotCholoropleth(this.value,defaultProjectionSystem);
+  if(donutsvg!=null){donutsvg.remove();}
+
+  var specificCountryStatmessage = document.getElementById(specificCountryStatId).innerHTML;
+  if(specificCountryStatmessage!=""){
+    document.getElementById(specificCountryStatId).innerHTML = "";
+  }
+  currentYear = this.value;
+  InvokeDonutChart(this.value)
+}
+</script>
+<p align="center">customized projection system</p>
+
+<center><label for="projectionSystemLabel">Choose a projection system</label>
+
+<select id="projections">
+  <option value="Wagner VI projection">Wagner VI projection</option>
+  <option value="The Robinson projection">The Robinson projection</option>
+  <option value="Patterson cylindrical projection">Patterson cylindrical projection</option>
+  <option value="Nell–Hammer projection" selected>Nell–Hammer projection</option>
+  <option value="Sinu-Mollweide projection">Sinu-Mollweide projection</option>
+  <option value="stereographic projection">stereographic projection </option>
+</select>
+</center>
+ <script>
+document.getElementById("projections").addEventListener("change", myFunction);
+
+function myFunction() {
+  var projectionSystem = document.getElementById("projections").value;
+  defaultProjectionSystem = projectionSystem;
+  if(svg!=null){svg.remove();}
+  plotCholoropleth(currentYear,projectionSystem);
+  
+}
+</script>
+
+</body>
+
+</html>
