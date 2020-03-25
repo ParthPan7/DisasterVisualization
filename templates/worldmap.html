@@ -19,8 +19,9 @@ https://medium.com/@louisemoxy/create-a-d3-line-chart-animation-336f1cb7dd61
 </div>
 </head>
 <style>
+
 	body{
-		position: absolute;
+
 		font-family:Helvetica;
 	}
 	#legendDivison{
@@ -73,7 +74,7 @@ h3{
 #chart{
     position:absolute;
     top : 350px;
-    left:600px;
+    left:630px;
 }
 
 #donut_data{
@@ -90,6 +91,7 @@ h3{
 #choroplethSVG{
 
   position: relative;
+  left: 30px;
 }
 #yearUpdationDiv{
 
@@ -103,7 +105,7 @@ h3{
 <script src="https://d3js.org/d3.v4.js"></script>
 <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
 <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.24.0/d3-legend.js"></script>
+
 
 
 <!--<div id="yearUpdationDiv"><center> <h3>Aggregate Disasters Impact  <span id="year"></span></h3></center></div>
@@ -148,11 +150,7 @@ h3{
     .attr("width", 600);
 // Map and projection
 var path = d3.geoPath();
-//d3.geoSinuMollweide()
-//d3.geoStereographic()
-//d3.geoVanDerGrinten2()
-//d3.geoNellHammer()
-//d3.geoWagner7()
+
 var projectionFunction;
 switch(projectionSystem){
   case "Nell–Hammer projection":
