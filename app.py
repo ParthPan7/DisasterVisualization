@@ -25,6 +25,8 @@ def radialStackBar():
     dataFrameCountryMapping = json.dumps(dataFrameCountryMapping)
     data = {'stack_bar_data':stackBarData,'country_mapping_data':dataFrameCountryMapping}
     return flask.render_template("radialStackBar.html", data=data)
-
+@app.route("/about")
+def aboutPage():
+    return flask.render_template("aboutPage.html")
 if __name__ == "__main__":
     app.run(debug=True)
