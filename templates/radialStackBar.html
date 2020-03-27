@@ -18,7 +18,11 @@
 	div.label{
 	    color:#8C5108;
 	}
-
+    #slidecontainer{
+     position:absolute;
+     top:300px;
+     left:1000px;
+    }
 </style>
 <!-- The radial bar chart has been referenced from web sources such as :: https://www.d3-graph-gallery.com/graph/circular_barplot_basic.html ::https://www.d3-graph-gallery.com/graph/circular_barplot_label.html -->
 <!-- other web sources are official d3.js tutorial from mike bostock ! :: https://bl.ocks.org/mbostock/3686329aa6e1f5938df8eef12ec353fe -->
@@ -34,6 +38,12 @@
 </div>
 <div  id="message">
 	<p id="paraMessage"></p>
+</div>
+<div id="slidecontainer">
+    <center> <input type="range" min="0" max="6" value="0" class="slider" id="myRange"></center>
+    <label style="color:#8C5108;s"><center>Alter death range</center></label>
+
+
 </div>
 <script>
  var data = {{ data.stack_bar_data | safe }};
@@ -188,18 +198,14 @@ plotRadialStackBar(data,range,0);
 
 
 </script>
+
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
 </head>
 <body>
 
-  <div class="slidecontainer">
-    <center> <input type="range" min="0" max="6" value="0" class="slider" id="myRange"></center>
-    <label style="color:#8C5108;s"><center>Alter death range</center></label>
 
-
-</div>
 <!-- Load d3.js -->
 <script>
 //logic for slider has been deduced from w3cschool.com
