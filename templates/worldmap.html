@@ -23,6 +23,7 @@ https://medium.com/@louisemoxy/create-a-d3-line-chart-animation-336f1cb7dd61
 	body{
 
 		font-family:Helvetica;
+
 	}
 	#legendDivison{
 		position: absolute;
@@ -68,8 +69,15 @@ https://medium.com/@louisemoxy/create-a-d3-line-chart-animation-336f1cb7dd61
 h3{
     opacity:0.7;
 }
-.slidecontainer {
-  width: 500px;
+#slidecontainer {
+
+width: 300px;
+margin-top: -100px;
+margin-left:1100px;
+position: relative;
+background-color: #f4e5c9;
+color: #CC6E67;
+font-style: italic;
 }
 #chart{
     position:absolute;
@@ -97,6 +105,25 @@ h3{
 
   position: relative;
   top: 70px;
+}
+#deathScaleLegend{
+ position:relative;
+
+}
+#titleScale{
+    margin-bottom:-15px;
+    margin-left:200px;
+    font-style:italic;
+    opacity:0.7;
+    color: #EF3B2C;
+}
+#projectionSystemDiv{
+ position: absolute;
+top: 700px;
+margin-left: 700px;
+color: #CC6E67;
+font-style: oblique;
+background-color: #f4ead6;
 }
 </style>
 
@@ -421,9 +448,9 @@ chart
 
 
 
-
+<p id="titleScale">death range scale</p>
 <div id="deathScaleLegend">
-    <center><span>Death range scale</span></center>
+
 </div>
 
 <script>
@@ -489,9 +516,10 @@ bar.append("text")
 }
 plotLinearScale();
 </script>
-<div class="slidecontainer">
+<div id="slidecontainer">
+    <label><center>change year</center></label>
     <center> <input type="range" min="1996" max="2017" value="50" class="slider" id="myRange"></center>
-    <label><center>Alter Year</center></label>
+
 
 
 </div>
@@ -670,9 +698,10 @@ slider.oninput = function() {
   InvokeDonutChart(this.value)
 }
 </script>
-<p align="center">customized projection system</p>
+<div id="projectionSystemDiv">
+    <p align="center"><strong>custom projection settings</strong></p>
 
-<center><label for="projectionSystemLabel">Choose a projection system</label>
+<center><label for="projectionSystemLabel">projection system</label>
 
 <select id="projections">
   <option value="Wagner VI projection">Wagner VI projection</option>
@@ -694,7 +723,7 @@ function myFunction() {
   
 }
 </script>
-
+</div>
 </body>
 
 </html>
