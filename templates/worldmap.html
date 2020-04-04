@@ -12,6 +12,7 @@ https://medium.com/@louisemoxy/create-a-d3-line-chart-animation-336f1cb7dd61
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <title>Dashboard</title>
 <div class="w3-bar w3-green">
   <form method="get" action="/map"> <a href="#" class="w3-bar-item w3-button"  onclick="event.target.parentNode.submit();">Dashboard</a> </form>
   <form method="get" action="/requestRadialStackBar"> <a href="#" class="w3-bar-item w3-button"  onclick="event.target.parentNode.submit();">Radial View</a> </form>
@@ -53,6 +54,8 @@ https://medium.com/@louisemoxy/create-a-d3-line-chart-animation-336f1cb7dd61
     -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
     -mox-box-shadow: 4px 4px 4px 10px rgba(0, 0, 0, 0.4);
     box-shadow: 4px 4px 10px rbga(0, 0, 0, 0.4) pointer-events: none;
+     border-style : solid;
+    border-color:red;
 }
 #tooltip.hidden {
     opacity: 0;
@@ -62,6 +65,7 @@ https://medium.com/@louisemoxy/create-a-d3-line-chart-animation-336f1cb7dd61
     font-family: Helvetica,sans-serif;
     font-size: 16px;
     line-height: 20px;
+
 }
 #year{
     color:#8B0000;
@@ -231,7 +235,6 @@ var colorScale = d3.scaleThreshold()
 // Load external data and boot
 d3.queue()
   .defer(d3.json, "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson")
- // .defer(graphData, function(d) {  if(d.Year=="2016"){data.set(d.Code, d.Deaths);} })
   .await(ready);
 
 function ready(error, topo) {
@@ -252,14 +255,16 @@ function ready(error, topo) {
 
        //alert(d.id.substring(0,2));
        d.total = data.get(d.id) ||0;
-       d3.select("#tooltip")
+       var tooltipholder = d3.select("#tooltip")
         .style("left", d3.event.pageX + "px")
         .style("top", d3.event.pageY + "px")
-        .style("opacity", 2)
-        .select("#value")
-        .text(dataCountryMappingDictonary[d.id]+" "+"Deaths :"+Math.round(d.total));
+        .style("opacity", 2);
 
-        
+        tooltipholder.select("#value")
+        .text(dataCountryMappingDictonary[d.id]);
+
+        tooltipholder.select("#deathNumber")
+        .text("Deaths : "+Math.round(d.total))
 
   }
 
@@ -449,7 +454,8 @@ chart
 <div id="tooltip" class="hidden">
     <p><strong></strong>
     </p>
-    <p><span id="value">100</span></p>
+    <p><strong><span id="value"></span></strong></p>
+    <p><span id="deathNumber"></span></p>
 </div>
 
 
