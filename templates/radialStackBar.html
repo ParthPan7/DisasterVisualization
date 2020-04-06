@@ -16,7 +16,9 @@
 		font-family: sans-serif;
 		background-color: #f4ead6;
 	    color: #A50E14;
-	    border-radius: 35px 60px;
+	    border-radius: 15px;
+	    border-style : outset;
+	    border-color : brown;
         padding : 25px;
 	}
 	div.label{
@@ -26,6 +28,11 @@
      position:absolute;
      top:300px;
      left:1000px;
+     border-style : outset;
+     border-radius : 15px;
+     border-color : brown;
+     background : #f4ead6;
+     padding : 10px;
 
     }
 
@@ -48,7 +55,7 @@
 </div>
 <div id="slidecontainer">
     <center> <input type="range" min="0" max="6" value="0" class="slider" id="myRange"></center>
-    <label style="color:#8C5108;s"><center>Alter death range</center></label>
+    <label style="color:#8C5108;"><center><strong>Alter death range</strong></center></label>
 
 
 </div>
@@ -126,11 +133,12 @@ var margin = {top: 150, right: 0, bottom: 0, left: 0},
   // Add the bars
  let MouseOverEventHandler = function(d,i){
  	//console.log(d.data["1996-2002"]);
- 	document.getElementById("countrystats").innerHTML = "<i>Country Name : </i> "+dataCountryMappingDictonary[d.data.Code]+"<br/>"+"<i><u>Death stats</u></i>"+"<br/><br/>"+"(1996-2002) - "+d.data["1996-2002"]+" deaths</br>"
- 															+"(2003-2006) - "+d.data["2003-2006"]+" deaths</br>"
- 															+"(2007-2010) - "+d.data["2007-2010"]+" deaths</br>"
- 															+"(2011-2017) - "+d.data["2011-2017"]+" deaths</br>"
- 															+"total deaths - "+d.data.total;	
+ 	document.getElementById("countrystats").innerHTML = "<i><strong>Country Name : </strong></i> "+dataCountryMappingDictonary[d.data.Code]+"<br/><br/>"+"<strong><i><u>Death stats</u></i></strong>"+"<br/><br/>"
+ 	                                                        +"<strong>(1996-2002) - </strong>"+d.data["1996-2002"]+" deaths</br>"
+ 															+"<strong>(2003-2006) - </strong>"+d.data["2003-2006"]+" deaths</br>"
+ 															+"<strong>(2007-2010) - </strong>"+d.data["2007-2010"]+" deaths</br>"
+ 															+"<strong>(2011-2017) - </strong>"+d.data["2011-2017"]+" deaths</br>"
+ 															+"<strong> total deaths - </strong>"+d.data.total;
  }
  let MouseOutEventHandler = function(d,i){
  	document.getElementById("countrystats").innerHTML ="";
@@ -213,7 +221,6 @@ document.getElementById("paraMessage").innerHTML = "<b>Selected Death Range </b>
 <body>
 
 
-<!-- Load d3.js -->
 <script>
 //logic for slider has been deduced from w3cschool.com
 var slider = document.getElementById("myRange");
