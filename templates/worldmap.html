@@ -33,13 +33,14 @@ https://medium.com/@louisemoxy/create-a-d3-line-chart-animation-336f1cb7dd61
 	}
 	#deathScaleLegend{
 	    position: relative;
+
 		top: 6px;
 		left: 10px;
 	}
     #yearUpdationDiv{
        position:relative;
-       top:140px;
-       align:center;
+       top:100px;
+       font-weight : bold;
 
     }
     #tooltip {
@@ -82,18 +83,24 @@ position: relative;
 background-color: #f4e5c9;
 color: #CC6E67;
 font-style: italic;
-border-radius: 15px 50px;
+border-radius: 15px 30px;
+padding : 5px;
+border-style:outset;
+border-color: brown;
 }
 #chart{
     position:absolute;
-    top : 350px;
-    left:630px;
+    top : 290px;
+    left:640px;
+    background-color: #FEE0D2;
+    border-color:brown;
+
 }
 
 #donut_data{
     position:absolute;
     top:180px;
-    left:680px;
+    left:580px;
 
 }
 #donutFeed{
@@ -104,17 +111,29 @@ border-radius: 15px 50px;
 	width : 220px;
 	border-radius: 35px 60px;
     padding-left : 25px;
+    border-style : outset;
+    border-color : brown;
 }
 #choroplethSVG{
 
   position: relative;
   left: 30px;
+
+}
+#headingText{
+ border-style : outset;
+ border-color:brown;
+ border-radius : 15px 30px;
+ width : 300px;
+  background-color: #f4e5c9;
 }
 #yearUpdationDiv{
 
   position: relative;
+
   top: 70px;
 }
+
 #deathScaleLegend{
  position:relative;
 
@@ -129,12 +148,15 @@ border-radius: 15px 50px;
 #projectionSystemDiv{
  position: absolute;
  width:300px;
-top: 700px;
+top: 670px;
 margin-left: 700px;
 color: #CC6E67;
 font-style: oblique;
 background-color: #f4ead6;
-border-radius: 15px 50px;
+border-radius: 15px 30px;
+border-style : outset;
+border-color : brown;
+padding : 8px;
 }
 </style>
 
@@ -150,7 +172,7 @@ border-radius: 15px 50px;
 <svg id="choroplethSVG" width="600" height = "600"> 
  
 </svg> -->
-<div id="yearUpdationDiv"><center> <h4>Aggregate Disasters Impact  <span id="year"></span></h4></center></div>
+<div id="yearUpdationDiv"><center> <strong><p id="headingText">Aggregate Disasters Impact  <span id="year"></span></p></h4></strong></center></div>
 <div id="choroplethSVG">
  
 </div>
@@ -178,14 +200,12 @@ border-radius: 15px 50px;
     //if (null != svg ) {svg.remove();}
     
 // The svg
-  /*svg = d3.select("#choroplethSVG").append("svg"),
-  width = +svg.attr("width"),
-  height = +svg.attr("height"); */
+
 
  svg = d3.select("#choroplethSVG")
     .append("svg")
     .attr("height", 600)
-    .attr("width", 600);
+    .attr("width", 600) ;
 // Map and projection
 var path = d3.geoPath();
 
@@ -341,9 +361,13 @@ function drawLineGraph(countryId){
 
  	lineGraphSvg = d3
   	.select("#chart")
+  	.style("border-style","solid")
+  	.style("border-radius","15px")
+  	.style("padding","15px")
   	.append("svg")
-  	.attr("height", 400)
-  	.attr("width", 750);
+  	.attr("height", 300)
+  	.attr("width", 750)
+  	;
 
 	const margin = { top: 0, bottom: 100, left: 50, right: 50 };
 	const chart = lineGraphSvg.append("g").attr("transform", `translate(${margin.left},0)`);
@@ -363,6 +387,7 @@ function drawLineGraph(countryId){
   	.scaleLinear()
   	.range([height, 0])
   	.domain([0, d3.max(graphData1, dataPoint => dataPoint.Deaths)]);
+
 	const xScale = d3
   	.scaleTime()
   	.range([0, width])
@@ -380,7 +405,7 @@ function drawLineGraph(countryId){
   	.attr("transform", `translate(${margin.left},0)`)
   	.datum(graphData1)
   	.attr("fill", "none")
-  	.attr("stroke", "steelblue")
+  	.attr("stroke", "brown")
   	.attr("stroke-linejoin", "round")
   	.attr("stroke-linecap", "round")
   	.attr("stroke-width", 1.5)
@@ -461,7 +486,7 @@ chart
 
 
 
-<p id="titleScale">death range scale</p>
+<p id="titleScale"><strong>death range scale (in figures)</strong></p>
 <div id="deathScaleLegend">
 
 </div>
@@ -530,7 +555,7 @@ bar.append("text")
 plotLinearScale();
 </script>
 <div id="slidecontainer">
-    <label><center>change year</center></label>
+    <label><center><strong>change year</strong></center></label>
     <center> <input type="range" min="1996" max="2017" value="50" class="slider" id="myRange"></center>
 
 
@@ -602,7 +627,7 @@ var graphData1 = graphData.filter(function (entry) {
 
 function drawDonutChart(data,color){
 
-	if (lineGraphSvg!=null) {lineGraphSvg.remove();}
+	if (lineGraphSvg!=null) { lineGraphSvg.remove(); d3.select("#chart").style("border-style","hidden").style("padding","0px"); }
   // Compute the position of each group on the pie:
   var pie = d3.pie()
     .value(function(d) {return d.value; })
@@ -628,6 +653,8 @@ function drawDonutChart(data,color){
     .enter()
     .append('path')
     .attr('d', arc)
+    //.style('stroke','brown')
+    //.style('stroke-width',0.7)
     .attr('fill', function(d){ return(color(d.data.key)) })
     .on("mouseover", function (d) {
 
