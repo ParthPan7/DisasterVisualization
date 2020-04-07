@@ -20,5 +20,6 @@ Visualization Final Project
 # Deployed heroku version
 
 In case of trouble follow the URL of deployed application (https://disastervizapp.herokuapp.com/)
+gitHubLink : https://github.com/parth71196/DisasterVisualization
 
 
